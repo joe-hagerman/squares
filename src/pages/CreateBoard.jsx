@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { fetchNFLGames } from '../lib/nfl'
 import { QUARTER_MOMENTS, END_MOMENTS } from '../lib/constants'
+import { generateJoinCode } from '../lib/board'
 import { useAuth } from '../context/AuthContext'
 
 export default function CreateBoard() {
@@ -82,6 +83,7 @@ export default function CreateBoard() {
           payout_reverse_final: moments.includes('Final') ? parseFloat(reversePayouts.Final) || null : null,
           scoring_moments: moments,
           rotate_numbers: rotateNumbers,
+          join_code: generateJoinCode(),
         })
         .select()
         .single()
