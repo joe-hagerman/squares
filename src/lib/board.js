@@ -65,3 +65,22 @@ export async function unlockBoard(boardId) {
 
   return error
 }
+
+const JOIN_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+export function generateJoinCode() {
+  return Array.from(
+    { length: 6 },
+    () => JOIN_CODE_CHARS[Math.floor(Math.random() * JOIN_CODE_CHARS.length)]
+  ).join('')
+}
+
+export async function getBoardByJoinCode(code) {
+  const { data, error } = await supabase
+    .from('boards')
+    .select('id')
+    .eq('join_code', code.toUpperCase().trim())
+    .single()
+  if (error) return null
+  return data.id
+}
