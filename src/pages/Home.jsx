@@ -1,9 +1,29 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getBoardByJoinCode } from '../lib/board'
 
 export default function Home() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+
+  const [joinCode, setJoinCode] = useState('')
+  const [joinError, setJoinError] = useState(null)
+  const [joinLoading, setJoinLoading] = useState(false)
+
+  async function handleJoin(e) {
+    e.preventDefault()
+    if (!joinCode.trim()) return
+    setJoinLoading(true)
+    setJoinError(null)
+    const boardId = await getBoardByJoinCode(joinCode.trim())
+    setJoinLoading(false)
+    if (!boardId) {
+      setJoinError('Board not found. Check the code and try again.')
+      return
+    }
+    navigate(`/board/${boardId}/join`)
+  }
 
   return (
     <div className="min-h-screen dot-grid text-white flex flex-col" style={{ background: 'var(--sq-bg)' }}>
@@ -134,6 +154,64 @@ export default function Home() {
           >
             My Boards
           </button>
+
+          <div style={{ height: '1px', background: 'rgba(var(--sq-accent-rgb),0.1)', margin: '4px 0' }} />
+
+          <form onSubmit={handleJoin} style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="Join code"
+              maxLength={6}
+              style={{
+                flex: 1,
+                fontFamily: 'var(--font-mono)',
+                fontSize: '14px',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: 'var(--sq-text)',
+                background: 'rgba(var(--sq-alpha),0.04)',
+                border: '1px solid rgba(var(--sq-alpha),0.12)',
+                padding: '14px 16px',
+                borderRadius: '2px',
+                outline: 'none',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={joinLoading || !joinCode.trim()}
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: '13px',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                color: joinLoading || !joinCode.trim() ? 'rgba(var(--sq-alpha),0.3)' : '#07070e',
+                background: joinLoading || !joinCode.trim() ? 'rgba(var(--sq-alpha),0.06)' : '#f59e0b',
+                border: 'none',
+                padding: '14px 20px',
+                borderRadius: '2px',
+                cursor: joinLoading || !joinCode.trim() ? 'default' : 'pointer',
+                transition: 'all 0.15s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {joinLoading ? '…' : 'Join'}
+            </button>
+          </form>
+          {joinError && (
+            <p style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '11px',
+              letterSpacing: '0.08em',
+              color: '#f87171',
+              textAlign: 'center',
+              marginTop: '-4px',
+            }}>
+              {joinError}
+            </p>
+          )}
 
           {user && (
             <button
