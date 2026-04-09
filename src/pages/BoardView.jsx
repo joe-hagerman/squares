@@ -77,10 +77,13 @@ export default function BoardView() {
           </div>
 
           {/* Teams line — full width, sits below QR on narrow screens */}
-          <div className="flex items-center gap-3">
-            <span className="font-display text-sm font-semibold tracking-wider text-gray-300 uppercase">{board.away_team}</span>
-            <span style={{ color: 'var(--sq-accent)', fontSize: '10px' }}>◆</span>
-            <span className="font-display text-sm font-semibold tracking-wider text-gray-300 uppercase">{board.home_team}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="font-display text-sm font-semibold tracking-wider text-gray-300 uppercase">{board.away_team}</span>
+              <span style={{ color: 'var(--sq-accent)', fontSize: '10px' }}>◆</span>
+              <span className="font-display text-sm font-semibold tracking-wider text-gray-300 uppercase">{board.home_team}</span>
+            </div>
+            {board.join_code && board.status === 'open' && <JoinCodePill code={board.join_code} />}
           </div>
         </div>
       </div>
@@ -153,5 +156,41 @@ export function WinnerList({ winners, squares, scoringMoments }) {
         })}
       </div>
     </div>
+  )
+}
+
+function JoinCodePill({ code }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      title="Click to copy join code"
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: '11px',
+        letterSpacing: '0.22em',
+        color: copied ? '#10b981' : 'var(--sq-accent)',
+        background: copied ? 'rgba(16,185,129,0.08)' : 'rgba(var(--sq-accent-rgb),0.08)',
+        border: `1px solid ${copied ? 'rgba(16,185,129,0.25)' : 'rgba(var(--sq-accent-rgb),0.2)'}`,
+        padding: '3px 10px',
+        borderRadius: '2px',
+        cursor: 'pointer',
+        transition: 'all 0.15s',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+      }}
+    >
+      <span style={{ fontSize: '9px', opacity: 0.6, letterSpacing: '0.15em' }}>JOIN</span>
+      <span>{copied ? 'COPIED' : code}</span>
+    </button>
   )
 }
