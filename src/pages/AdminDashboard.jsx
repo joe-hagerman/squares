@@ -72,6 +72,9 @@ export default function AdminDashboard() {
     return () => { supabase.removeChannel(channelRef.current) }
   }, [boardId])
 
+  // Scroll to top on mount — React Router preserves scroll position across navigation.
+  useEffect(() => { window.scrollTo(0, 0) }, [])
+
   // Lock the board once all 100 squares are claimed and paid.
   // Must live in a useEffect — state updater callbacks don't run synchronously,
   // so reading a flag set inside setSquares(fn) immediately after is unreliable.
