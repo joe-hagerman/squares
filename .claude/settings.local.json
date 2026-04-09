@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/joemh/code/squares -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.jsx -o -name *.js \\\\\\) ! -path */node_modules/*)",
+      "Bash(grep -r \"QuickShareModal\\\\|ShareSheet\\\\|FloatingMenu\" /c/Users/joemh/code/squares/src --include=*.jsx --include=*.ts --include=*.tsx)",
+      "Bash(wc -l /c/Users/joemh/code/squares/src/components/*.jsx)",
+      "Bash(find /c/Users/joemh/code/squares/src -type f \\\\\\(-name *.js -o -name *.jsx -o -name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(find /c/Users/joemh/code/squares -type f \\\\\\(-name *.sql -o -name *.md \\\\\\))",
+      "Bash(find /c/Users/joemh/code/squares/supabase -name *.sql)",
+      "Bash(find /c/Users/joemh/code/squares -name .env*)",
+      "Bash(supabase functions:*)",
+      "Bash(grep -E \"\\\\.jsx$\")"
+    ]
+  }
+}
