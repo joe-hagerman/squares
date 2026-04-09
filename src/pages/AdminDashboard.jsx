@@ -10,6 +10,7 @@ import ScoreEntry from '../components/ScoreEntry'
 import PayoutGroup from '../components/PayoutGroup'
 import WinnerBanner from '../components/WinnerBanner'
 import FloatingMenu from '../components/FloatingMenu'
+import PayoutStrip from '../components/PayoutStrip'
 
 export default function AdminDashboard() {
   const { boardId } = useParams()
@@ -182,6 +183,7 @@ export default function AdminDashboard() {
             <span className="font-mono text-[10px] text-gray-400">{claimed} claimed · {paidCount} paid</span>
             <span className="font-mono text-[10px] text-gray-400">{100 - claimed} open</span>
           </div>
+          <PayoutStrip board={board} />
         </div>
       </div>
 

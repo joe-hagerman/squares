@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import SquaresGrid from '../components/SquaresGrid'
 import WinnerBanner from '../components/WinnerBanner'
 import FloatingMenu from '../components/FloatingMenu'
+import PayoutStrip from '../components/PayoutStrip'
 import { QRCodeCanvas } from 'qrcode.react'
 
 export default function BoardView() {
@@ -77,7 +78,7 @@ export default function BoardView() {
           </div>
 
           {/* Teams line — full width, sits below QR on narrow screens */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <span className="font-display text-sm font-semibold tracking-wider text-gray-300 uppercase">{board.away_team}</span>
               <span style={{ color: 'var(--sq-accent)', fontSize: '10px' }}>◆</span>
@@ -85,6 +86,7 @@ export default function BoardView() {
             </div>
             {board.join_code && board.status === 'open' && <JoinCodePill code={board.join_code} />}
           </div>
+          <PayoutStrip board={board} />
         </div>
       </div>
 

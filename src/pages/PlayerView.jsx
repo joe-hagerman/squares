@@ -6,6 +6,7 @@ import SquaresGrid from '../components/SquaresGrid'
 import WinnerBanner from '../components/WinnerBanner'
 import PaymentMethod from '../components/PaymentMethod'
 import FloatingMenu from '../components/FloatingMenu'
+import PayoutStrip from '../components/PayoutStrip'
 import { WinnerList } from './BoardView'
 
 export default function PlayerView() {
@@ -286,6 +287,7 @@ export default function PlayerView() {
               <MiniStat label="Pending" value={pendingCount} pending={pendingCount > 0} />
               <MiniStat label="Owed" value={amountOwed > 0 ? `$${amountOwed}` : '—'} warn={unpaidCount > 0} />
             </div>
+            <PayoutStrip board={board} />
           </div>
         </div>
 
