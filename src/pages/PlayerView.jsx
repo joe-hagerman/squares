@@ -14,7 +14,6 @@ export default function PlayerView() {
   const [boardId, setBoardId] = useState(null)
   const [board, setBoard] = useState(null)
   const [squares, setSquares] = useState([])
-  const [mySquares, setMySquares] = useState([])
   const [admin, setAdmin] = useState(null)
   const [latestWinner, setLatestWinner] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -58,10 +57,6 @@ export default function PlayerView() {
               squaresRef.current = next
               return next
             })
-            setMySquares((prev) => {
-              if (!payload.new.owner_name) return prev.filter((s) => s.id !== payload.new.id)
-              return prev.map((s) => s.id === payload.new.id ? payload.new : s)
-            })
           }
         )
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'boards', filter: `id=eq.${id}` },
@@ -92,7 +87,6 @@ export default function PlayerView() {
       setBoard(boardData)
       setSquares(allSquares)
       squaresRef.current = allSquares
-      setMySquares(owned)
       setAdmin(adminData)
       setWinners(winnersData ?? [])
       setLoading(false)
@@ -121,6 +115,8 @@ export default function PlayerView() {
     </div>
   )
 
+  // Derive mySquares from squares so it's always in sync with realtime updates.
+  const mySquares = squares.filter((s) => s.player_token === playerToken && s.owner_name)
   const mySquareIds = new Set(mySquares.map((s) => s.id))
   const winnerSquareIds = new Set(winners.map((w) => w.square_id))
   const playerName = mySquares[0]?.owner_name ?? joinInfo?.name ?? 'Player'
@@ -136,7 +132,6 @@ export default function PlayerView() {
     for (const sq of toMark) {
       const { data, error } = await supabase.from('squares').update({ payment_pending: true }).eq('id', sq.id).select().single()
       if (!error && data) {
-        setMySquares((prev) => prev.map((s) => s.id === data.id ? data : s))
         setSquares((prev) => prev.map((s) => s.id === data.id ? data : s))
       }
     }
@@ -149,7 +144,6 @@ export default function PlayerView() {
     for (const sq of toUndo) {
       const { data, error } = await supabase.from('squares').update({ payment_pending: false }).eq('id', sq.id).select().single()
       if (!error && data) {
-        setMySquares((prev) => prev.map((s) => s.id === data.id ? data : s))
         setSquares((prev) => prev.map((s) => s.id === data.id ? data : s))
       }
     }
@@ -188,7 +182,6 @@ export default function PlayerView() {
       const next = squaresRef.current.map((s) => s.id === data.id ? data : s)
       setSquares(next)
       squaresRef.current = next
-      setMySquares((prev) => [...prev, data])
     }
     setClaiming(false)
   }
@@ -234,7 +227,6 @@ export default function PlayerView() {
         const next = squaresRef.current.map((s) => s.id === data.id ? data : s)
         setSquares(next)
         squaresRef.current = next
-        setMySquares((prev) => [...prev, data])
       } else {
         skipped.add(pick.id)
       }
@@ -252,7 +244,6 @@ export default function PlayerView() {
       .select()
       .single()
     if (!error && data) {
-      setMySquares((prev) => prev.filter((s) => s.id !== data.id))
       setSquares((prev) => prev.map((s) => s.id === data.id ? data : s))
     }
   }

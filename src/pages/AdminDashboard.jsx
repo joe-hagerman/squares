@@ -72,6 +72,15 @@ export default function AdminDashboard() {
     return () => { supabase.removeChannel(channelRef.current) }
   }, [boardId])
 
+  // Lock the board once all 100 squares are claimed and paid.
+  // Must live in a useEffect — state updater callbacks don't run synchronously,
+  // so reading a flag set inside setSquares(fn) immediately after is unreliable.
+  useEffect(() => {
+    if (!board || board.status !== 'open' || squares.length !== 100) return
+    if (squares.every((s) => s.owner_name && s.is_paid)) {
+      lockBoard(boardId, { rotateNumbers: board.rotate_numbers, scoringMoments: board.scoring_moments })
+    }
+  }, [squares, board, boardId])
 
   if (loading) return (
     <div className="min-h-screen dot-grid flex items-center justify-center" style={{ background: 'var(--sq-bg)' }}>
@@ -229,15 +238,7 @@ export default function AdminDashboard() {
                 pricePerSquare={board.price_per_square}
                 isLocked={isLocked}
                 onSquareUpdated={(updated) => {
-                  let shouldLock = false
-                  setSquares((prev) => {
-                    const next = prev.map((s) => s.id === updated.id ? updated : s)
-                    shouldLock = board.status === 'open' && next.every((s) => s.owner_name && s.is_paid)
-                    return next
-                  })
-                  if (shouldLock) {
-                    lockBoard(boardId, { rotateNumbers: board.rotate_numbers, scoringMoments: board.scoring_moments })
-                  }
+                  setSquares((prev) => prev.map((s) => s.id === updated.id ? updated : s))
                 }}
               />
             </div>
