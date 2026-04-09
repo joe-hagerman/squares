@@ -16,13 +16,18 @@ export default function Home() {
     if (!joinCode.trim()) return
     setJoinLoading(true)
     setJoinError(null)
-    const boardId = await getBoardByJoinCode(joinCode.trim())
-    setJoinLoading(false)
-    if (!boardId) {
-      setJoinError('Board not found. Check the code and try again.')
-      return
+    try {
+      const boardId = await getBoardByJoinCode(joinCode.trim())
+      if (!boardId) {
+        setJoinError('Board not found. Check the code and try again.')
+        return
+      }
+      navigate(`/board/${boardId}/join`)
+    } catch {
+      setJoinError('Something went wrong. Please try again.')
+    } finally {
+      setJoinLoading(false)
     }
-    navigate(`/board/${boardId}/join`)
   }
 
   return (
@@ -161,7 +166,10 @@ export default function Home() {
             <input
               type="text"
               value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              onChange={(e) => {
+                setJoinCode(e.target.value.toUpperCase())
+                if (joinError) setJoinError(null)
+              }}
               placeholder="Join code"
               maxLength={6}
               style={{
