@@ -82,5 +82,5 @@ export async function getBoardByJoinCode(code) {
     .eq('join_code', code.toUpperCase().trim())
     .single()
   if (error) return null
-  return data.id
+  return data?.id ?? null
 }

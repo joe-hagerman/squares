@@ -4,7 +4,7 @@ import { generateJoinCode } from '../board'
 test('generateJoinCode returns a 6-char uppercase alphanumeric string', () => {
   const code = generateJoinCode()
   expect(code).toHaveLength(6)
-  expect(code).toMatch(/^[A-Z2-9]{6}$/)
+  expect(code).toMatch(/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/)
 })
 
 test('generateJoinCode produces unique codes', () => {
