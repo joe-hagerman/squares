@@ -166,10 +166,9 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats strip */}
-          <div className="grid grid-cols-3 gap-px overflow-hidden rounded-sm" style={{ background: 'rgba(var(--sq-accent-rgb),0.1)' }}>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-sm" style={{ background: 'rgba(var(--sq-accent-rgb),0.1)' }}>
             <StatCell label="Per Square" value={`$${board.price_per_square}`} />
             <StatCell label="Claimed" value={`${claimed}/100`} accent={claimed === 100} />
-            <StatCell label="Scoring" value={board.scoring_moments.join(' · ')} small />
           </div>
 
           {/* Progress bar */}

@@ -1,6 +1,7 @@
 /**
  * PayoutStrip — shows per-moment payout amounts in the board header.
- * Renders one cell per scoring moment; includes reverse payout if configured.
+ * Minimal inline layout: moment label + amount, with reverse payout shown
+ * as a secondary indicator when configured.
  * Used identically in AdminDashboard, BoardView, and PlayerView.
  */
 
@@ -15,30 +16,41 @@ export default function PayoutStrip({ board }) {
 
   return (
     <div
-      className="mt-3 grid gap-px rounded-sm overflow-hidden"
-      style={{
-        gridTemplateColumns: `repeat(${moments.length}, minmax(0, 1fr))`,
-        background: 'rgba(var(--sq-accent-rgb),0.1)',
-      }}
+      className="mt-3 pt-3 flex items-baseline flex-wrap gap-x-4 gap-y-1"
+      style={{ borderTop: '1px solid rgba(var(--sq-alpha),0.06)' }}
     >
+      <span
+        className="font-mono text-[9px] tracking-[0.22em] uppercase"
+        style={{ color: 'rgba(var(--sq-alpha),0.2)' }}
+      >
+        Payouts
+      </span>
+
       {moments.map((moment) => {
         const key = MOMENT_KEY[moment]
         const payout = board[`payout_${key}`]
         const reverse = board[`payout_reverse_${key}`]
         return (
-          <div
-            key={moment}
-            className="px-3 py-2.5 flex flex-col items-center gap-1"
-            style={{ background: 'var(--sq-surface)' }}
-          >
-            <p className="font-mono text-[9px] tracking-[0.18em] text-gray-400 uppercase">{moment}</p>
-            <p className="font-display text-lg font-semibold leading-none" style={{ color: 'var(--sq-accent)' }}>
+          <div key={moment} className="flex items-baseline gap-1.5">
+            <span
+              className="font-mono text-[9px] tracking-[0.1em] uppercase"
+              style={{ color: 'rgba(var(--sq-alpha),0.3)' }}
+            >
+              {moment}
+            </span>
+            <span
+              className="font-display text-sm font-semibold leading-none"
+              style={{ color: 'var(--sq-accent)' }}
+            >
               {payout != null ? `$${payout}` : '—'}
-            </p>
+            </span>
             {reverse != null && (
-              <p className="font-mono text-[9px] leading-none" style={{ color: 'rgba(var(--sq-accent-rgb),0.6)' }}>
-                ↩ ${reverse}
-              </p>
+              <span
+                className="font-mono text-[9px] leading-none"
+                style={{ color: 'rgba(var(--sq-accent-rgb),0.45)' }}
+              >
+                +${reverse}↩
+              </span>
             )}
           </div>
         )
