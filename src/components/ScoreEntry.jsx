@@ -62,7 +62,7 @@ export default function ScoreEntry({ board, squares, scoreUpdates, winners, chan
   const previewHomeDigit = bothEntered ? homeInt % 10 : null
   const previewAwayDigit = bothEntered ? awayInt % 10 : null
   const previewPrimary = bothEntered && isLocked ? findWinningSquare(previewHomeDigit, previewAwayDigit, moment) : null
-  const previewReverse = bothEntered && isLocked && previewHomeDigit !== previewAwayDigit
+  const previewReverse = bothEntered && isLocked
     ? findWinningSquare(previewAwayDigit, previewHomeDigit, moment)
     : null
   const reversePayout = board[`payout_reverse_${moment.toLowerCase()}`] ?? null
@@ -95,7 +95,7 @@ export default function ScoreEntry({ board, squares, scoreUpdates, winners, chan
       if (winErr) throw winErr
 
       const keptIds = [newWinner.id]
-      if (reversePayout && previewHomeDigit !== previewAwayDigit) {
+      if (reversePayout) {
         const reverseSquare = findWinningSquare(previewAwayDigit, previewHomeDigit, moment)
         if (reverseSquare) {
           const { data: revWinner } = await supabase.from('winners').insert({
@@ -278,7 +278,7 @@ export default function ScoreEntry({ board, squares, scoreUpdates, winners, chan
                   No square found for {previewAwayDigit}–{previewHomeDigit}
                 </p>
               )}
-              {reversePayout && previewHomeDigit !== previewAwayDigit && previewReverse && (
+              {reversePayout && previewReverse && (
                 <WinnerPreviewRow
                   label="Reverse"
                   name={previewReverse.owner_name}
