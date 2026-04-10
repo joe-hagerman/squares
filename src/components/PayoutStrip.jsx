@@ -45,11 +45,19 @@ export default function PayoutStrip({ board }) {
               {payout != null ? `$${payout}` : '—'}
             </span>
             {reverse != null && (
-              <span
-                className="font-mono text-[9px] leading-none"
-                style={{ color: 'rgba(var(--sq-accent-rgb),0.45)' }}
-              >
-                +${reverse}↩
+              <span className="relative group/rev">
+                <span
+                  className="font-mono text-[9px] leading-none cursor-default"
+                  style={{ color: 'rgba(var(--sq-accent-rgb),0.45)' }}
+                >
+                  +${reverse}↩
+                </span>
+                <span
+                  className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 rounded-sm px-2.5 py-2 font-mono text-[10px] leading-relaxed opacity-0 group-hover/rev:opacity-100 transition-opacity z-50 whitespace-normal"
+                  style={{ background: 'var(--sq-tooltip)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'rgba(var(--sq-alpha),0.7)' }}
+                >
+                  Reverse payout — awarded when the winning digits are flipped (e.g. home 3 / away 7 also pays home 7 / away 3)
+                </span>
               </span>
             )}
           </div>
