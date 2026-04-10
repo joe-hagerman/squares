@@ -7,6 +7,7 @@ import WinnerBanner from '../components/WinnerBanner'
 import PaymentMethod from '../components/PaymentMethod'
 import FloatingMenu from '../components/FloatingMenu'
 import PayoutStrip from '../components/PayoutStrip'
+import JoinCodePill from '../components/JoinCodePill'
 import { WinnerList } from './BoardView'
 
 export default function PlayerView() {
@@ -482,38 +483,3 @@ function MiniStat({ label, value, accent, warn, pending }) {
   )
 }
 
-function JoinCodePill({ code }) {
-  const [copied, setCopied] = useState(false)
-
-  function handleCopy() {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
-  }
-
-  return (
-    <button
-      onClick={handleCopy}
-      title="Click to copy join code"
-      style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: '11px',
-        letterSpacing: '0.22em',
-        color: copied ? '#10b981' : 'var(--sq-accent)',
-        background: copied ? 'rgba(16,185,129,0.08)' : 'rgba(var(--sq-accent-rgb),0.08)',
-        border: `1px solid ${copied ? 'rgba(16,185,129,0.25)' : 'rgba(var(--sq-accent-rgb),0.2)'}`,
-        padding: '3px 10px',
-        borderRadius: '2px',
-        cursor: 'pointer',
-        transition: 'all 0.15s',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-      }}
-    >
-      <span style={{ fontSize: '9px', opacity: 0.6, letterSpacing: '0.15em' }}>JOIN</span>
-      <span>{copied ? 'COPIED' : code}</span>
-    </button>
-  )
-}
