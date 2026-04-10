@@ -41,11 +41,16 @@ export default function BoardView() {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'boards', filter: `id=eq.${boardId}` },
         (payload) => setBoard(payload.new)
       )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'winners', filter: `board_id=eq.${boardId}` },
+        (payload) => setWinners((prev) => [...prev.filter((w) => w.moment !== payload.new.moment || w.is_reverse !== payload.new.is_reverse), payload.new])
+      )
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'winners', filter: `board_id=eq.${boardId}` },
+        (payload) => setWinners((prev) => prev.map((w) => w.id === payload.new.id ? payload.new : w))
+      )
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'winners', filter: `board_id=eq.${boardId}` },
+        (payload) => setWinners((prev) => prev.filter((w) => w.id !== payload.old.id))
+      )
       .on('broadcast', { event: 'winner' }, ({ payload }) => {
-        setWinners((prev) => [
-          ...prev.filter((w) => !(w.moment === payload.moment && w.is_reverse === payload.is_reverse)),
-          payload,
-        ])
         setLatestWinner(payload)
       })
       .subscribe()
