@@ -281,14 +281,15 @@ export default function PlayerView() {
               {board.join_code && board.status === 'open' && <JoinCodePill code={board.join_code} />}
             </div>
 
+            <PayoutStrip board={board} />
+
             {/* Stats strip */}
-            <div className="grid grid-cols-4 gap-px rounded-sm overflow-hidden" style={{ background: 'rgba(var(--sq-accent-rgb),0.1)' }}>
+            <div className="mt-3 grid grid-cols-4 gap-px rounded-sm overflow-hidden" style={{ background: 'rgba(var(--sq-accent-rgb),0.1)' }}>
               <MiniStat label="Squares" value={mySquares.length} />
               <MiniStat label="Paid" value={paidCount} accent={paidCount === mySquares.length && mySquares.length > 0} />
               <MiniStat label="Pending" value={pendingCount} pending={pendingCount > 0} />
               <MiniStat label="Owed" value={amountOwed > 0 ? `$${amountOwed}` : '—'} warn={unpaidCount > 0} />
             </div>
-            <PayoutStrip board={board} />
           </div>
         </div>
 

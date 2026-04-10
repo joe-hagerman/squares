@@ -166,8 +166,10 @@ export default function AdminDashboard() {
             {board.join_code && <JoinCodePill code={board.join_code} />}
           </div>
 
+          <PayoutStrip board={board} />
+
           {/* Stats strip */}
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-sm" style={{ background: 'rgba(var(--sq-accent-rgb),0.1)' }}>
+          <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-sm" style={{ background: 'rgba(var(--sq-accent-rgb),0.1)' }}>
             <StatCell label="Per Square" value={`$${board.price_per_square}`} />
             <StatCell label="Claimed" value={`${claimed}/100`} accent={claimed === 100} />
           </div>
@@ -183,7 +185,6 @@ export default function AdminDashboard() {
             <span className="font-mono text-[10px] text-gray-400">{claimed} claimed · {paidCount} paid</span>
             <span className="font-mono text-[10px] text-gray-400">{100 - claimed} open</span>
           </div>
-          <PayoutStrip board={board} />
         </div>
       </div>
 
