@@ -112,7 +112,10 @@ export default function PrintableBoard() {
             {rotating ? '  ·  Rotating numbers' : ''}
           </p>
           {/* Payouts */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap', marginTop: '8px' }}>
+            <span style={{ fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#9ca3af' }}>
+              Payouts
+            </span>
             {moments.map((m) => {
               const key = `payout_${m.toLowerCase()}`
               const val = board[key]
@@ -120,10 +123,10 @@ export default function PrintableBoard() {
               const rVal = board[rKey]
               if (!val && !rVal) return null
               return (
-                <span key={m} style={{ fontSize: '10px', color: '#374151', letterSpacing: '0.1em' }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>{m}</span>
-                  {val ? ` $${val}` : ''}
-                  {rVal ? ` · rev $${rVal}` : ''}
+                <span key={m} style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9ca3af' }}>{m}</span>
+                  {val != null && <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: '#b45309' }}>${val}</span>}
+                  {rVal != null && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#b45309', opacity: 0.6 }}>↩${rVal}</span>}
                 </span>
               )
             })}
