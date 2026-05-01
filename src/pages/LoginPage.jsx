@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -29,7 +30,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) {
-      setError(error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message)
+      setError(error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : friendlyError(error, 'auth'))
     } else {
       navigate(from, { replace: true })
     }
@@ -43,7 +44,7 @@ export default function LoginPage() {
     const { data, error } = await supabase.auth.signUp({ email, password })
     setLoading(false)
     if (error) {
-      setError(error.message)
+      setError(friendlyError(error, 'auth'))
     } else if (data?.user?.identities?.length === 0) {
       setError('An account with this email already exists.')
     } else {
@@ -60,7 +61,7 @@ export default function LoginPage() {
     })
     setLoading(false)
     if (error) {
-      setError(error.message)
+      setError(friendlyError(error, 'auth'))
     } else {
       setMode('resetSent')
     }
@@ -73,7 +74,7 @@ export default function LoginPage() {
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
-    if (error) setError(error.message)
+    if (error) setError(friendlyError(error, 'auth'))
   }
 
   if (mode === 'resetSent') {
@@ -104,9 +105,10 @@ export default function LoginPage() {
               type="email"
               required
               placeholder="Email"
+              aria-label="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none"
+              className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
               style={{ background: 'rgba(var(--sq-alpha),0.05)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'var(--sq-text)' }}
             />
             {error && <p className="font-mono text-xs text-red-400">{error}</p>}
@@ -135,27 +137,30 @@ export default function LoginPage() {
               type="email"
               required
               placeholder="Email"
+              aria-label="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none"
+              className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
               style={{ background: 'rgba(var(--sq-alpha),0.05)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'var(--sq-text)' }}
             />
             <input
               type="password"
               required
               placeholder="Password"
+              aria-label="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none"
+              className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
               style={{ background: 'rgba(var(--sq-alpha),0.05)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'var(--sq-text)' }}
             />
             <input
               type="password"
               required
               placeholder="Confirm password"
+              aria-label="Confirm password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none"
+              className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
               style={{ background: 'rgba(var(--sq-alpha),0.05)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'var(--sq-text)' }}
             />
             {error && <p className="font-mono text-xs text-red-400">{error}</p>}
@@ -200,18 +205,20 @@ export default function LoginPage() {
             type="email"
             required
             placeholder="Email"
+            aria-label="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none"
+            className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
             style={{ background: 'rgba(var(--sq-alpha),0.05)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'var(--sq-text)' }}
           />
           <input
             type="password"
             required
             placeholder="Password"
+            aria-label="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none"
+            className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
             style={{ background: 'rgba(var(--sq-alpha),0.05)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'var(--sq-text)' }}
           />
           <div className="flex justify-end">

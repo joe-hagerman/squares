@@ -28,7 +28,7 @@ export default function WinnerBanner({ winner }) {
           <p className="text-sm font-medium">{winner.moment}{winner.is_reverse ? ' (Reverse)' : ''} — {winner.away_score}–{winner.home_score}</p>
           {winner.payout && <p className="text-sm font-semibold">${winner.payout} payout</p>}
         </div>
-        <button onClick={() => setVisible(false)} className="text-gray-700 hover:text-gray-900 text-xl leading-none">✕</button>
+        <button onClick={() => setVisible(false)} aria-label="Dismiss" className="text-gray-700 hover:text-gray-900 text-xl leading-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900 rounded-sm">✕</button>
       </div>
     </div>
   )

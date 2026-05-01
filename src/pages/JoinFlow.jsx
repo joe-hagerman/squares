@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 
 export default function JoinFlow() {
   const { boardId } = useParams()
@@ -33,7 +34,7 @@ export default function JoinFlow() {
         supabase.from('boards').select('*').eq('id', boardId).single(),
         supabase.from('board_admins').select('cashapp_handle, venmo_handle').eq('board_id', boardId).limit(1).single(),
       ])
-      if (bErr) { setError(bErr.message); setLoading(false); return }
+      if (bErr) { setError(friendlyError(bErr, 'load')); setLoading(false); return }
       setBoard(boardData)
       setAdmin(adminData)
       setLoading(false)
@@ -164,6 +165,7 @@ function Field({ type = 'text', placeholder, value, onChange, required }) {
     <input
       type={type}
       placeholder={placeholder}
+      aria-label={placeholder}
       value={value}
       onChange={onChange}
       required={required}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 import { useAuth } from '../context/AuthContext'
 
 const STATUS_CONFIG = {
@@ -23,7 +24,7 @@ export default function MyBoards() {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
-        if (error) setError(error.message)
+        if (error) setError(friendlyError(error, 'load'))
         else setBoards(data ?? [])
         setLoading(false)
       })
@@ -58,7 +59,7 @@ export default function MyBoards() {
             <button
               onClick={async () => { await signOut(); navigate('/') }}
               className="font-mono text-[10px] tracking-widest uppercase px-2.5 py-2 rounded-sm"
-              style={{ color: 'rgba(var(--sq-alpha),0.3)', border: '1px solid rgba(var(--sq-alpha),0.08)' }}
+              style={{ color: 'rgba(var(--sq-alpha),0.3)', border: '1px solid rgba(var(--sq-alpha),0.08)', cursor: 'pointer' }}
             >
               Sign out
             </button>

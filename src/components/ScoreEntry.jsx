@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 import { isBoardLocked } from '../lib/board'
 
 /**
@@ -98,10 +99,11 @@ export default function ScoreEntry({ board, squares, scoreUpdates, winners, chan
       if (reversePayout) {
         const reverseSquare = findWinningSquare(previewAwayDigit, previewHomeDigit, moment)
         if (reverseSquare) {
-          const { data: revWinner } = await supabase.from('winners').insert({
+          const { data: revWinner, error: revErr } = await supabase.from('winners').insert({
             board_id: board.id, square_id: reverseSquare.id, moment,
             home_score: homeInt, away_score: awayInt, payout: reversePayout, is_reverse: true,
           }).select().single()
+          if (revErr) console.error('Reverse winner insert failed:', revErr.message)
           if (revWinner) keptIds.push(revWinner.id)
         }
       }
@@ -127,7 +129,7 @@ export default function ScoreEntry({ board, squares, scoreUpdates, winners, chan
       if (next) setMoment(next)
       else { setHomeScore(''); setAwayScore('') }
     } catch (err) {
-      setError(err.message)
+      setError(friendlyError(err))
     } finally {
       setSubmitting(false)
     }
@@ -218,6 +220,7 @@ export default function ScoreEntry({ board, squares, scoreUpdates, winners, chan
                   min="0"
                   required
                   readOnly={readOnly}
+                  aria-label={`${label} score`}
                   value={value}
                   onChange={(e) => !readOnly && onChange(e.target.value)}
                   placeholder="—"
@@ -327,6 +330,10 @@ export default function ScoreEntry({ board, squares, scoreUpdates, winners, chan
             const reverse = reverseByMoment[m]
             const primarySq = primary ? squares.find((s) => s.id === primary.square_id) : null
             const reverseSq = reverse ? squares.find((s) => s.id === reverse.square_id) : null
+            // Same-digit fallback: when digits match, reverse = primary (may not have a separate DB record)
+            const sameDigits = score.home_score % 10 === score.away_score % 10
+            const reversePayoutForMoment = board[`payout_reverse_${m.toLowerCase()}`] ?? null
+            const derivedReverse = !reverse && sameDigits && reversePayoutForMoment && primarySq
             return (
               <div key={m} className="flex items-center gap-3 px-3 py-2 rounded-sm" style={{ background: 'rgba(var(--sq-alpha),0.02)', border: '1px solid rgba(var(--sq-alpha),0.05)' }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(var(--sq-alpha),0.3)', minWidth: '36px' }}>{m}</span>
@@ -335,7 +342,9 @@ export default function ScoreEntry({ board, squares, scoreUpdates, winners, chan
                 </span>
                 <div className="flex gap-3 flex-wrap">
                   {primarySq && <CompactResult label="W" name={primarySq.owner_name} payout={primary.payout} />}
-                  {reverseSq && <CompactResult label="R" name={reverseSq.owner_name} payout={reverse.payout} />}
+                  {reverseSq
+                    ? <CompactResult label="R" name={reverseSq.owner_name} payout={reverse.payout} />
+                    : derivedReverse && <CompactResult label="R" name={primarySq.owner_name} payout={reversePayoutForMoment} />}
                 </div>
               </div>
             )

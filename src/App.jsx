@@ -17,6 +17,8 @@ import ThemeToggle from './components/ThemeToggle'
 function AppRoutes() {
   const location = useLocation()
   const isPrint = location.pathname.endsWith('/print')
+  // Board/player pages embed ThemeToggle inline in their headers to avoid overlap
+  const hasInlineTheme = /^\/(board\/[^/]+(\/admin)?|player\/)/.test(location.pathname)
   return (
     <>
       <Routes>
@@ -32,7 +34,7 @@ function AppRoutes() {
         <Route path="/player/:playerToken" element={<PlayerView />} />
         <Route path="/board/:boardId/print" element={<PrintableBoard />} />
       </Routes>
-      {!isPrint && <ThemeToggle />}
+      {!isPrint && !hasInlineTheme && <ThemeToggle />}
     </>
   )
 }

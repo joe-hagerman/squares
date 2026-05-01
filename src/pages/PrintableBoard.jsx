@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 import { getTeamLogoUrl } from '../lib/nfl'
 import { isBoardLocked } from '../lib/board'
 
@@ -24,7 +25,7 @@ export default function PrintableBoard() {
       supabase.from('boards').select('*').eq('id', boardId).single(),
       supabase.from('squares').select('*').eq('board_id', boardId),
     ]).then(([{ data: b, error: bErr }, { data: s, error: sErr }]) => {
-      if (bErr || sErr) { setError((bErr || sErr).message); setLoading(false); return }
+      if (bErr || sErr) { setError(friendlyError(bErr || sErr, 'load')); setLoading(false); return }
       setBoard(b)
       setSquares(s)
       setLoading(false)

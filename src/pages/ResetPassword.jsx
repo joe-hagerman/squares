@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 
 export default function ResetPassword() {
   const navigate = useNavigate()
@@ -17,7 +18,7 @@ export default function ResetPassword() {
     const { error } = await supabase.auth.updateUser({ password })
     setLoading(false)
     if (error) {
-      setError(error.message)
+      setError(friendlyError(error, 'auth'))
     } else {
       navigate('/boards', { replace: true })
     }
@@ -38,18 +39,20 @@ export default function ResetPassword() {
                 type="password"
                 required
                 placeholder="New password"
+                aria-label="New password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none"
+                className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
                 style={{ background: 'rgba(var(--sq-alpha),0.05)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'var(--sq-text)' }}
               />
               <input
                 type="password"
                 required
                 placeholder="Confirm new password"
+                aria-label="Confirm new password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none"
+                className="w-full font-mono text-sm px-4 py-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
                 style={{ background: 'rgba(var(--sq-alpha),0.05)', border: '1px solid rgba(var(--sq-alpha),0.12)', color: 'var(--sq-text)' }}
               />
               {error && <p className="font-mono text-xs text-red-400">{error}</p>}

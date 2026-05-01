@@ -17,7 +17,7 @@
  *   scoringMoments      – string[] (order for rotating display)
  *   mode                – 'default' | 'payment'
  */
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import TeamBanner from './TeamBanner'
 
@@ -25,7 +25,7 @@ const AWAY_BANNER_W = '2.25rem'
 const NUM_CELL = '1.5rem'   // size of each number header cell (rotating mode)
 const NUM_CELL_STD = '2rem' // standard (non-rotating) number cell size
 
-export default function SquaresGrid({
+const SquaresGrid = React.memo(function SquaresGrid({
   squares,
   homeTeam,
   awayTeam,
@@ -41,17 +41,18 @@ export default function SquaresGrid({
   scoringMoments = [],
   mode = 'default',
 }) {
-  const grid = {}
-  for (const sq of squares) {
-    grid[`${sq.row_index}-${sq.col_index}`] = sq
-  }
+  const grid = useMemo(() => {
+    const g = {}
+    for (const sq of squares) g[`${sq.row_index}-${sq.col_index}`] = sq
+    return g
+  }, [squares])
 
   const [tooltip, setTooltip] = useState(null) // { name, x, y, above }
   const tooltipTimer = useRef(null)
 
   useEffect(() => () => clearTimeout(tooltipTimer.current), [])
 
-  function revealName(e, name) {
+  const revealName = useCallback((e, name) => {
     if (tooltipTimer.current) clearTimeout(tooltipTimer.current)
     const rect = e.currentTarget.getBoundingClientRect()
     const above = rect.top > 80
@@ -62,7 +63,7 @@ export default function SquaresGrid({
       above,
     })
     tooltipTimer.current = setTimeout(() => setTooltip(null), 2000)
-  }
+  }, [])
 
   function cellStyle(sq) {
     if (!sq) return 'sq-cell-empty'
@@ -277,7 +278,8 @@ export default function SquaresGrid({
       <CellTooltip tooltip={tooltip} />
     </div>
   )
-}
+})
+export default SquaresGrid
 
 function Legend({ mode, winnerSquareIds, mySquareIds }) {
   return (

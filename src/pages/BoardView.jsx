@@ -1,11 +1,13 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 import SquaresGrid from '../components/SquaresGrid'
 import WinnerBanner from '../components/WinnerBanner'
 import FloatingMenu from '../components/FloatingMenu'
 import PayoutStrip from '../components/PayoutStrip'
 import JoinCodePill from '../components/JoinCodePill'
+import ThemeToggle from '../components/ThemeToggle'
 import { QRCodeCanvas } from 'qrcode.react'
 
 export default function BoardView() {
@@ -17,6 +19,7 @@ export default function BoardView() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const channelRef = useRef(null)
+  const winnerSquareIds = useMemo(() => new Set(winners.map((w) => w.square_id)), [winners])
 
   useEffect(() => {
     async function init() {
@@ -25,7 +28,7 @@ export default function BoardView() {
         supabase.from('squares').select('*').eq('board_id', boardId),
         supabase.from('winners').select('*, squares(owner_name)').eq('board_id', boardId),
       ])
-      if (bErr || sErr) { setError((bErr || sErr).message); setLoading(false); return }
+      if (bErr || sErr) { setError(friendlyError(bErr || sErr, 'load')); setLoading(false); return }
       setBoard(boardData)
       setSquares(squaresData)
       setWinners(winnersData ?? [])
@@ -62,11 +65,10 @@ export default function BoardView() {
   if (error) return <div className="min-h-screen bg-gray-950 text-red-400 flex items-center justify-center">{error}</div>
 
   const claimed = squares.filter((s) => s.owner_name).length
-  const winnerSquareIds = new Set(winners.map((w) => w.square_id))
 
   return (
     <>
-    <div className="min-h-screen text-white" style={{ background: 'var(--sq-bg)' }}>
+    <div className="min-h-screen text-white" style={{ background: 'var(--sq-bg)', paddingTop: 'env(safe-area-inset-top)' }}>
       {/* ── HERO HEADER ───────────────────────────────── */}
       <div className="animate-slide-up" style={{ borderBottom: '1px solid rgba(var(--sq-accent-rgb),0.2)', background: 'linear-gradient(180deg, var(--sq-bg-raised) 0%, var(--sq-bg) 100%)' }}>
         <div className="max-w-2xl mx-auto px-5 pt-6 pb-5">
@@ -78,8 +80,11 @@ export default function BoardView() {
                 {board.name}
               </h1>
             </div>
-            <div className="flex-shrink-0 p-1.5 rounded-sm" style={{ background: '#ffffff' }}>
-              <QRCodeCanvas value={`${window.location.origin}/board/${boardId}`} size={54} bgColor="#ffffff" fgColor="#000000" />
+            <div className="flex-shrink-0 flex items-start gap-2">
+              <ThemeToggle inline />
+              <div className="p-1.5 rounded-sm" style={{ background: '#ffffff' }}>
+                <QRCodeCanvas value={`${window.location.origin}/board/${boardId}`} size={54} bgColor="#ffffff" fgColor="#000000" />
+              </div>
             </div>
           </div>
 
@@ -113,35 +118,54 @@ export default function BoardView() {
 
         {/* Winner list */}
         {winners.length > 0 && (
-          <WinnerList winners={winners} squares={squares} scoringMoments={board.scoring_moments} />
+          <WinnerList winners={winners} squares={squares} scoringMoments={board.scoring_moments} board={board} />
         )}
 
       </div>
 
-      <FloatingMenu boardId={boardId} isLocked={board.status === 'locked' || board.status === 'complete'} />
       <WinnerBanner winner={latestWinner} />
     </div>
+    <FloatingMenu boardId={boardId} isLocked={board.status === 'locked' || board.status === 'complete'} />
     </>
   )
 }
 
-export function WinnerList({ winners, squares, scoringMoments }) {
-  const sorted = [...winners].sort((a, b) => {
-    const ai = scoringMoments.indexOf(a.moment)
-    const bi = scoringMoments.indexOf(b.moment)
-    if (ai !== bi) return ai - bi
-    return (a.is_reverse ? 1 : 0) - (b.is_reverse ? 1 : 0)
-  })
+export function WinnerList({ winners, squares, scoringMoments, board }) {
+  // Build per-moment maps to detect missing reverse winners
+  const primaryByMoment = {}
+  const reverseByMoment = {}
+  for (const w of winners) {
+    if (w.is_reverse) reverseByMoment[w.moment] = w
+    else primaryByMoment[w.moment] = w
+  }
+
+  // Build ordered list, inserting a derived reverse row for same-digit moments
+  // where the reverse winner was not stored separately in DB
+  const entries = []
+  for (const m of scoringMoments) {
+    const primary = primaryByMoment[m]
+    if (!primary) continue
+    entries.push(primary)
+    if (reverseByMoment[m]) {
+      entries.push(reverseByMoment[m])
+    } else if (board) {
+      const sameDigits = primary.home_score % 10 === primary.away_score % 10
+      const reversePayoutForMoment = board[`payout_reverse_${m.toLowerCase()}`] ?? null
+      if (sameDigits && reversePayoutForMoment) {
+        entries.push({ ...primary, id: `${primary.id}-derived-reverse`, is_reverse: true, payout: reversePayoutForMoment })
+      }
+    }
+  }
 
   return (
     <div className="space-y-2">
       <p className="font-mono text-[10px] tracking-[0.2em] text-gray-400 uppercase">Winners</p>
       <div className="rounded-sm overflow-hidden" style={{ background: 'var(--sq-surface)', border: '1px solid rgba(var(--sq-accent-rgb),0.15)' }}>
-        {sorted.map((w, i) => {
+        {entries.map((w, i) => {
           const sq = squares.find((s) => s.id === w.square_id)
           return (
             <div key={w.id} className="flex items-center justify-between px-4 py-3"
-              style={{ borderBottom: i < sorted.length - 1 ? '1px solid rgba(var(--sq-alpha),0.06)' : undefined }}>
+              style={{ borderBottom: i < entries.length - 1 ? '1px solid rgba(var(--sq-alpha),0.06)' : undefined }}>
               <div className="flex items-center gap-3">
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: w.is_reverse ? 'rgba(var(--sq-accent-rgb),0.5)' : 'var(--sq-accent)', minWidth: '36px' }}>
                   {w.moment}

@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 import { useAuth } from '../context/AuthContext'
 import { lockBoard } from '../lib/board'
 import LockIcon from '../components/LockIcon'
@@ -12,6 +13,7 @@ import WinnerBanner from '../components/WinnerBanner'
 import FloatingMenu from '../components/FloatingMenu'
 import PayoutStrip from '../components/PayoutStrip'
 import JoinCodePill from '../components/JoinCodePill'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function AdminDashboard() {
   const { boardId } = useParams()
@@ -26,6 +28,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null)
   const [tab, setTab] = useState('payments')
   const channelRef = useRef(null)
+  const winnerSquareIds = useMemo(() => new Set(winners.map((w) => w.square_id)), [winners])
 
   useEffect(() => {
     async function init() {
@@ -35,7 +38,7 @@ export default function AdminDashboard() {
         supabase.from('score_updates').select('*').eq('board_id', boardId),
         supabase.from('winners').select('*').eq('board_id', boardId),
       ])
-      if (bErr || sErr) { setError((bErr || sErr).message); setLoading(false); return }
+      if (bErr || sErr) { setError(friendlyError(bErr || sErr, 'load')); setLoading(false); return }
       if (boardData.user_id !== null && boardData.user_id !== user?.id) {
         setError('Access denied — this board belongs to a different account.')
         setLoading(false)
@@ -61,7 +64,7 @@ export default function AdminDashboard() {
         (payload) => setScoreUpdates((prev) => [...prev, payload.new])
       )
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'winners', filter: `board_id=eq.${boardId}` },
-        (payload) => setWinners((prev) => [...prev.filter((w) => w.moment !== payload.new.moment), payload.new])
+        (payload) => setWinners((prev) => [...prev.filter((w) => w.moment !== payload.new.moment || w.is_reverse !== payload.new.is_reverse), payload.new])
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'winners', filter: `board_id=eq.${boardId}` },
         (payload) => setWinners((prev) => prev.map((w) => w.id === payload.new.id ? payload.new : w))
@@ -83,7 +86,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!board || board.status !== 'open' || squares.length !== 100) return
     if (squares.every((s) => s.owner_name && s.is_paid)) {
-      lockBoard(boardId, { rotateNumbers: board.rotate_numbers, scoringMoments: board.scoring_moments })
+      lockBoard(boardId)
     }
   }, [squares, board, boardId])
 
@@ -127,7 +130,8 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="min-h-screen dot-grid text-white" style={{ background: 'var(--sq-bg)', fontFamily: 'inherit' }}>
+    <>
+    <div className="min-h-screen dot-grid text-white" style={{ background: 'var(--sq-bg)', fontFamily: 'inherit', paddingTop: 'env(safe-area-inset-top)' }}>
 
       {/* ── HERO HEADER ───────────────────────────────── */}
       <div className="animate-slide-up" style={{ borderBottom: '1px solid rgba(var(--sq-accent-rgb),0.2)', background: 'linear-gradient(180deg, var(--sq-bg-raised) 0%, var(--sq-bg) 100%)' }}>
@@ -146,10 +150,11 @@ export default function AdminDashboard() {
                 <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${isOpen ? 'animate-pulse-dot' : ''}`} />
                 <span className={`font-mono text-[10px] tracking-widest font-medium ${statusCfg.text}`}>{statusCfg.label}</span>
               </div>
+              <ThemeToggle inline />
               <button
                 onClick={async () => { await signOut(); navigate('/') }}
                 className="font-mono text-[10px] tracking-widest uppercase px-2.5 py-1 rounded-sm transition-colors"
-                style={{ color: 'rgba(var(--sq-alpha),0.55)', border: '1px solid rgba(var(--sq-alpha),0.2)' }}
+                style={{ color: 'rgba(var(--sq-alpha),0.55)', border: '1px solid rgba(var(--sq-alpha),0.2)', cursor: 'pointer' }}
               >
                 Sign out
               </button>
@@ -236,7 +241,7 @@ export default function AdminDashboard() {
                 rotatedRowNumbers={board.row_numbers_rotated}
                 rotatedColNumbers={board.col_numbers_rotated}
                 scoringMoments={board.scoring_moments}
-                winnerSquareIds={new Set(winners.map((w) => w.square_id))}
+                winnerSquareIds={winnerSquareIds}
                 mode="payment"
               />
               <PaymentTracker
@@ -297,9 +302,10 @@ export default function AdminDashboard() {
 
       </div>
 
-      <FloatingMenu boardId={boardId} isLocked={isLocked} />
       <WinnerBanner winner={latestWinner} />
     </div>
+    <FloatingMenu boardId={boardId} isLocked={isLocked} />
+    </>
   )
 }
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import QuickShareModal from './QuickShareModal'
 import LockIcon from './LockIcon'
 
@@ -9,16 +10,17 @@ export default function FloatingMenu({ boardId, isLocked }) {
   const items = [
     { key: 'invite', icon: <IconInvite />, label: 'Invite', onClick: isLocked ? undefined : () => setInviteOpen(true), locked: isLocked, lockMessage: 'Board is locked — squares are no longer available to claim.' },
     { key: 'share', icon: <IconShare />, label: 'Share', onClick: () => setShareOpen(true) },
+    { key: 'donate', icon: <IconDonate />, label: 'Tip', onClick: () => window.open('https://buymeacoffee.com/joehagerman', '_blank', 'noopener,noreferrer') },
   ]
 
-  return (
+  const menu = (
     <div
       style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 45,
+        zIndex: 9999,
         padding: '0 1rem calc(1rem + env(safe-area-inset-bottom))',
       }}
     >
@@ -64,6 +66,8 @@ export default function FloatingMenu({ boardId, isLocked }) {
       )}
     </div>
   )
+
+  return createPortal(menu, document.body)
 }
 
 function MenuButton({ icon, label, onClick, locked, lockMessage }) {
@@ -127,7 +131,7 @@ function MenuButton({ icon, label, onClick, locked, lockMessage }) {
 
 function IconInvite() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <line x1="19" y1="8" x2="19" y2="14" />
@@ -136,9 +140,17 @@ function IconInvite() {
   )
 }
 
+function IconDonate() {
+  return (
+    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  )
+}
+
 function IconShare() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
       <polyline points="16 6 12 2 8 6" />
       <line x1="12" y1="2" x2="12" y2="15" />

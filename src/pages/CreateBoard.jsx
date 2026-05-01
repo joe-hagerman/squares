@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 import { fetchNFLGames } from '../lib/nfl'
 import { QUARTER_MOMENTS, END_MOMENTS } from '../lib/constants'
 import { generateJoinCode } from '../lib/board'
@@ -106,7 +107,7 @@ export default function CreateBoard() {
 
       navigate(`/board/${board.id}/admin`)
     } catch (err) {
-      setError(err.message)
+      setError(friendlyError(err))
     } finally {
       setSubmitting(false)
     }

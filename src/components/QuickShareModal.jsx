@@ -201,6 +201,7 @@ function CloseButton({ onClick }) {
   return (
     <button
       onClick={onClick}
+      aria-label="Close"
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         width: '28px', height: '28px',

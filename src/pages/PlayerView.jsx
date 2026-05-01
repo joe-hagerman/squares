@@ -1,18 +1,20 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
+import { friendlyError } from '../lib/errors'
 import SquaresGrid from '../components/SquaresGrid'
 import WinnerBanner from '../components/WinnerBanner'
 import PaymentMethod from '../components/PaymentMethod'
 import FloatingMenu from '../components/FloatingMenu'
 import PayoutStrip from '../components/PayoutStrip'
 import JoinCodePill from '../components/JoinCodePill'
+import ThemeToggle from '../components/ThemeToggle'
 import { WinnerList } from './BoardView'
 
 export default function PlayerView() {
   const { playerToken } = useParams()
-  const { state: joinInfo } = useLocation()
+  const { state: locationJoinInfo } = useLocation()
   const [boardId, setBoardId] = useState(null)
   const [board, setBoard] = useState(null)
   const [squares, setSquares] = useState([])
@@ -27,18 +29,43 @@ export default function PlayerView() {
   const [randomCount, setRandomCount] = useState('1')
   const squaresRef = useRef([])
 
+  // Persist joinInfo to localStorage so it survives a page refresh.
+  // Location state (from React Router) is lost on reload; localStorage is not.
+  useEffect(() => {
+    if (locationJoinInfo) {
+      localStorage.setItem(`joinInfo:${playerToken}`, JSON.stringify(locationJoinInfo))
+    }
+  }, [playerToken, locationJoinInfo])
+
+  const joinInfo = useMemo(() => {
+    if (locationJoinInfo) return locationJoinInfo
+    try {
+      const stored = localStorage.getItem(`joinInfo:${playerToken}`)
+      return stored ? JSON.parse(stored) : null
+    } catch { return null }
+  }, [locationJoinInfo, playerToken])
+
+  const winnerSquareIds = useMemo(() => new Set(winners.map((w) => w.square_id)), [winners])
+  const mySquareIds = useMemo(
+    () => new Set(squares.filter((s) => s.player_token === playerToken && s.owner_name).map((s) => s.id)),
+    [squares, playerToken]
+  )
+
   const playerUrl = window.location.href
 
   // Fetch data + subscribe to realtime in one effect.
   // Channel is created before the parallel fetch so no updates are missed.
   useEffect(() => {
     let channel = null
+    let cancelled = false
 
     async function init() {
       const { data: mine, error: mErr } = await supabase
         .from('squares')
         .select('*')
         .eq('player_token', playerToken)
+
+      if (cancelled) return
 
       const owned = mine?.filter((s) => s.owner_name) ?? []
       const id = owned[0]?.board_id ?? joinInfo?.boardId
@@ -85,7 +112,7 @@ export default function PlayerView() {
         supabase.from('winners').select('*').eq('board_id', id),
       ])
 
-      if (bErr || sErr) { setError((bErr || sErr).message); setLoading(false); return }
+      if (bErr || sErr) { setError(friendlyError(bErr || sErr, 'load')); setLoading(false); return }
       setBoard(boardData)
       setSquares(allSquares)
       squaresRef.current = allSquares
@@ -97,7 +124,7 @@ export default function PlayerView() {
     }
 
     init()
-    return () => { if (channel) supabase.removeChannel(channel) }
+    return () => { cancelled = true; if (channel) supabase.removeChannel(channel) }
   }, [playerToken])
 
   const isOpen = board?.status === 'open'
@@ -119,8 +146,6 @@ export default function PlayerView() {
 
   // Derive mySquares from squares so it's always in sync with realtime updates.
   const mySquares = squares.filter((s) => s.player_token === playerToken && s.owner_name)
-  const mySquareIds = new Set(mySquares.map((s) => s.id))
-  const winnerSquareIds = new Set(winners.map((w) => w.square_id))
   const playerName = mySquares[0]?.owner_name ?? joinInfo?.name ?? 'Player'
   const paidCount = mySquares.filter((s) => s.is_paid).length
   const pendingCount = mySquares.filter((s) => s.payment_pending && !s.is_paid).length
@@ -252,7 +277,7 @@ export default function PlayerView() {
 
   return (
     <>
-      <div className="min-h-screen dot-grid text-white" style={{ background: 'var(--sq-bg)' }}>
+      <div className="min-h-screen dot-grid text-white" style={{ background: 'var(--sq-bg)', paddingTop: 'env(safe-area-inset-top)' }}>
 
         {/* ── HEADER ─────────────────────────────────── */}
         <div className="animate-slide-up" style={{ borderBottom: '1px solid rgba(var(--sq-accent-rgb),0.2)', background: 'linear-gradient(180deg, var(--sq-bg-raised) 0%, var(--sq-bg) 100%)' }}>
@@ -266,8 +291,11 @@ export default function PlayerView() {
                 </h1>
               </div>
               {/* QR code */}
-              <div className="flex-shrink-0 p-1.5 rounded-sm" style={{ background: '#ffffff' }}>
-                <QRCodeCanvas value={playerUrl} size={54} bgColor="#ffffff" fgColor="#000000" />
+              <div className="flex-shrink-0 flex items-start gap-2">
+                <ThemeToggle inline />
+                <div className="p-1.5 rounded-sm" style={{ background: '#ffffff' }}>
+                  <QRCodeCanvas value={playerUrl} size={54} bgColor="#ffffff" fgColor="#000000" />
+                </div>
               </div>
             </div>
 
@@ -323,7 +351,7 @@ export default function PlayerView() {
                 <button
                   onClick={() => { setClaimingMore(false); setClaiming(false) }}
                   className="font-display text-xs font-bold tracking-widest uppercase px-4 py-2 rounded-sm"
-                  style={{ background: '#f59e0b', color: '#07070e' }}
+                  style={{ background: '#f59e0b', color: '#07070e', cursor: 'pointer' }}
                 >
                   Done
                 </button>
@@ -333,16 +361,17 @@ export default function PlayerView() {
                 <span className="font-mono text-[10px] text-gray-500 tracking-wider uppercase">Random:</span>
                 <input
                   type="number" min="1" max={squares.filter((s) => !s.owner_name).length}
+                  aria-label="Number of squares to claim"
                   value={randomCount}
                   onChange={(e) => setRandomCount(e.target.value)}
-                  className="font-mono text-sm text-white text-center w-14 py-1.5 rounded-sm outline-none"
+                  className="font-mono text-sm text-white text-center w-14 py-1.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
                   style={{ background: 'rgba(var(--sq-alpha),0.06)', border: '1px solid rgba(var(--sq-alpha),0.1)' }}
                 />
                 <button
                   onClick={claimRandom}
                   disabled={claiming || squares.filter((s) => !s.owner_name).length === 0}
                   className="flex-1 font-display text-xs font-bold tracking-widest uppercase py-1.5 rounded-sm transition-all disabled:opacity-40"
-                  style={{ background: 'rgba(var(--sq-accent-rgb),0.12)', color: 'var(--sq-accent)', border: '1px solid rgba(var(--sq-accent-rgb),0.2)' }}
+                  style={{ background: 'rgba(var(--sq-accent-rgb),0.12)', color: 'var(--sq-accent)', border: '1px solid rgba(var(--sq-accent-rgb),0.2)', cursor: 'pointer' }}
                 >
                   {claiming ? 'Claiming…' : 'Assign Me Squares'}
                 </button>
@@ -376,7 +405,7 @@ export default function PlayerView() {
 
           {/* ── WINNERS ──────────────────────────────── */}
           {winners.length > 0 && (
-            <WinnerList winners={winners} squares={squares} scoringMoments={board.scoring_moments} />
+            <WinnerList winners={winners} squares={squares} scoringMoments={board.scoring_moments} board={board} />
           )}
 
           {/* ── PAYMENT CARD ─────────────────────────── */}

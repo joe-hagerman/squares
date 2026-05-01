@@ -1,6 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+button:not(:disabled), a, [role="button"] {
+  cursor: pointer;
+}
+
 @theme {
   --font-display: 'Oswald', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;

@@ -9,7 +9,10 @@
       "Bash(find /c/Users/joemh/code/squares/supabase -name *.sql)",
       "Bash(find /c/Users/joemh/code/squares -name .env*)",
       "Bash(supabase functions:*)",
-      "Bash(grep -E \"\\\\.jsx$\")"
+      "Bash(grep -E \"\\\\.jsx$\")",
+      "Bash(npx vitest:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
