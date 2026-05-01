@@ -104,7 +104,7 @@ const SquaresGrid = React.memo(function SquaresGrid({
     const headerHeight = `calc(${N} * ${NUM_CELL})`
 
     return (
-      <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-x-auto" style={{ overscrollBehaviorX: 'none' }}>
         <div style={{ minWidth: '360px' }}>
 
           {/* HOME TEAM BANNER */}
@@ -202,7 +202,7 @@ const SquaresGrid = React.memo(function SquaresGrid({
 
   // ── STANDARD MODE ──────────────────────────────────────────────────
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full overflow-x-auto" style={{ overscrollBehaviorX: 'none' }}>
       <div style={{ minWidth: '380px' }}>
 
         {/* HOME TEAM BANNER (top) */}
