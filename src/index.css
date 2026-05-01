@@ -7,6 +7,10 @@ html {
   overscroll-behavior-x: none;
 }
 
+body {
+  touch-action: pan-y;
+}
+
 button:not(:disabled), a, [role="button"] {
   cursor: pointer;
 }
