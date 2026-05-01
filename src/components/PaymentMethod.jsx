@@ -35,7 +35,7 @@ export default function PaymentMethod({ platform, handle, amount, note, verb = '
 
   return (
     <button
-      onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+      onClick={() => window.open(url, '_blank')}
       className="inline-flex items-center gap-2 px-3 py-2 rounded font-semibold text-xs transition-opacity hover:opacity-80"
       style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
     >
