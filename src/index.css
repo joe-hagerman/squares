@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 html {
-  overflow-x: clip;
+  overflow-x: hidden;
   max-width: 100%;
   overscroll-behavior-x: none;
 }
