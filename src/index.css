@@ -4,6 +4,7 @@
 html {
   overflow-x: clip;
   max-width: 100%;
+  overscroll-behavior-x: none;
 }
 
 button:not(:disabled), a, [role="button"] {
