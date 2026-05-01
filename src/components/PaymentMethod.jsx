@@ -34,15 +34,13 @@ export default function PaymentMethod({ platform, handle, amount, note, verb = '
   const displayHandle = platform === 'cashapp' ? `$${handle}` : `@${handle}`
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
       className="inline-flex items-center gap-2 px-3 py-2 rounded font-semibold text-xs transition-opacity hover:opacity-80"
       style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
     >
       <span>{verb} ${amount} via {cfg.label}</span>
       <span className="opacity-60 font-normal">{displayHandle}</span>
-    </a>
+    </button>
   )
 }
